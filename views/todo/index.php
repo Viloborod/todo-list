@@ -20,7 +20,7 @@ $this->registerJs("var phpTodos = " . Json::encode($todos) . ";",  \yii\web\View
     </header>
     <!-- This section should be hidden by default and shown when there are todos -->
     <section class="main">
-        <input id="toggle-all" class="toggle-all" type="checkbox">
+        <input id="toggle-all" class="toggle-all" type="checkbox" checked="checked">
         <label for="toggle-all">Mark all as complete</label>
         <ul class="todo-list" id="tag-list">
             <!-- These are here just to show the structure of the list items -->
@@ -28,7 +28,7 @@ $this->registerJs("var phpTodos = " . Json::encode($todos) . ";",  \yii\web\View
         </ul>
     </section>
     <!-- This footer should hidden by default and shown when there are todos -->
-    <footer class="footer" id="tag-footer">
+    <footer class="footer" id="tag-footer" <?= empty($todos) ? 'style="display: none"' : '' ?>  >
         <!-- This should be `0 items left` by default -->
         <span class="todo-count"><strong id="todo-count">0</strong> item left</span>
         <!-- Remove this if you don't implement routing -->

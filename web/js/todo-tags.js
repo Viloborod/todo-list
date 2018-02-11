@@ -16,10 +16,7 @@ $(function () {
             var footerActive = footer.find('#tag-footer-active');
             var footerCompleted = footer.find('#tag-footer-completed');
 
-            tagListField.on('click', '.destroy', function () {
-                removeTag($(this).closest('li'));
-            });
-
+            //ФИЛЬТРЫ
             footerAll.click(function () {
                 tagListField.find('li').each(function () {
                     $(this).show();
@@ -32,7 +29,7 @@ $(function () {
             footerActive.click(function () {
                 tagListField.find('li').each(function () {
                     tag = $(this);
-                    if (tag.hasClass('view')) {
+                    if (!tag.hasClass('completed')) {
                         tag.show();
                     } else {
                         tag.hide();
@@ -58,6 +55,18 @@ $(function () {
                 footerCompleted.addClass('selected');
             });
 
+            //ПЕРЕРАСЧЕТ КОЛИЧЕСТВА АКТИВНЫХ СТРОК
+            function recountTodoCount() {
+                tagListFieldLength = tagListField.find('li').not('.completed').length;
+                tagForm.find('#todo-count').html(tagListFieldLength);
+                if (tagListFieldLength > 0) {
+                    $('#tag-footer').show();
+                } else {
+                    $('#tag-footer').hide();
+                }
+            }
+
+            //ЗАПОЛНЕНИЕ ТАБЛИЦЫ
             setTimeout(updateTags, 0);
 
             function updateTags() {
@@ -65,20 +74,24 @@ $(function () {
                 $.each(phpTodos, function (i, val) {
                     addTag(val['id'], val['name'], val['state']);
                 });
-                recountTodoCount();
-            }
-
-            function recountTodoCount() {
-                tagForm.find('#todo-count').html(tagListField.find('li').not('.completed').length);
+                if (!phpTodos.length) {
+                    recountTodoCount();
+                }
+                tagListField.find('li').each(function () {
+                    tag = $(this);
+                    if (!tag.hasClass('completed')) {
+                        $('#toggle-all')[0].checked = false;
+                    }
+                });
             }
 
             function addTag(id, name, state) {
-                var checked = (state == 'completed') ? 'checked' : '';
+                var checked = (state == 'completed') ? 'checked="checked"' : '';
                 var classState = (state == 'completed') ? 'completed' : '';
                 var tag = $(
                     '<li class="' + classState + '" data-id=' + id + '>' +
                         '<div class="view">' +
-                            '<input class="toggle" type="checkbox"' + checked + '>' +
+                            '<input class="toggle" type="checkbox" ' + checked + '>' +
                             '<label>' + name + '</label>' +
                             '<button class="destroy"></button>' +
                         '</div>' +
@@ -90,45 +103,97 @@ $(function () {
                 recountTodoCount();
             }
 
-            function changeTag(id, name, state) {
-                var tag = $('li[data-id="'+id+'"]');
-
-
-                recountTodoCount();
-            }
-
-            tagListField.on("change", "input.toggle:checkbox", function (e) {
-                if (this.checked) {
-                    $(this).closest('li').addClass('completed');
-                } else {
-                    $(this).closest('li').removeClass('completed');
-                }
-            });
-
             function showWarningAlert() {
                 alert('Произошла ошибка, перезагрузите страницу')
             }
 
-            //УДАЛЕНИЕ ОДНОЙ ЗАПИСИ
+            //УДАЛЕНИЕ СТРОК
+            tagListField.on('click', '.destroy', function () {
+                removeTag($(this).closest('li'));
+            });
+
             function removeTag(tag) {
-                tag.remove();
-                recountTodoCount();
+                todoApp.addClass('loading-overlay');
+                $.post('/todo/remove', {
+                    tagId: tag.data('id')
+                }).done(function (response) {
+                    if (response.success) {
+                        tag.remove();
+                    } else {
+                        console.log(response.message);
+                        showWarningAlert();
+                    }
+                }).fail(function () {
+                    showWarningAlert();
+                }).always(function () {
+                    todoApp.removeClass('loading-overlay');
+                    recountTodoCount();
+                });
+
             }
 
             //ИЗМЕНЕНИЕ СТАТУСА ОДНОЙ ЗАПИСИ
             tagListField.on("click", "input.toggle:checkbox", function (e) {
                 var checkBox = $(this);
-                var state = 'view';
-                todoApp.addClass('loading-overlay');
+                var state = this.checked ? 'completed' : 'view';
                 if (this.checked) {
-                    state = 'completed';
+                    $(this)[0].checked = true;
+                    $(this).closest('li').addClass('completed');
+                } else {
+                    $(this)[0].checked = false;
+                    $(this).closest('li').removeClass('completed');
                 }
+                recountTodoCount();
+                changeState([checkBox.closest('li').data('id')], state);
+                if (tagListField.find('li.completed').length == 0) {
+                    $('#toggle-all')[0].checked = false;
+                } else if (tagListField.find('li:not(.completed)').length == 0) {
+                    $('#toggle-all')[0].checked = true;
+                }
+            });
+
+            function changeTag(id, name, state) {
+                var tag = $('li[data-id="'+id+'"]');
+                recountTodoCount();
+            }
+
+            //ИЗМЕНЕНИЕ СТАТУСА ВСЕХ ЗАПИСЕЙ
+            $('#toggle-all').change(function () {
+                var toggleAllChecked = this.checked;
+                var checkedInput = tagListField.find('li input.toggle:not(:checked)');
+                var notcheckedInput = tagListField.find('li input.toggle:checked');
+                var tagIds = [];
+                if (toggleAllChecked && checkedInput.length > 0) {
+                    checkedInput.closest('li').each(function (i, val) {
+                         tagIds.push($(val).data('id'));
+                     });
+                    $.each(checkedInput, function (i, val) {
+                        val.checked = true;
+                    });
+                    checkedInput.closest('li').addClass('completed');
+                } else if (notcheckedInput.length > 0) {
+                    notcheckedInput.closest('li').each(function (i, val) {
+                        tagIds.push($(val).data('id'));
+                    });
+                    $.each(notcheckedInput, function (i, val) {
+                        val.checked = false;
+                    });
+                    notcheckedInput.closest('li').removeClass('completed');
+                }
+                if (tagIds != 0) {
+                    recountTodoCount();
+                    changeState(tagIds, toggleAllChecked ? 'completed' : 'view')
+                }
+            });
+
+            function changeState(tagIds, state) {
+                todoApp.addClass('loading-overlay');
                 $.post('/todo/change-state', {
-                    id: checkBox.closest('li').data('id'),
+                    tagIds: tagIds,
                     state: state
                 }).done(function (response) {
                     if (response.success) {
-                        changeTag(response.id, response.name, response.state)
+
                     } else {
                         console.log(response.message);
                         showWarningAlert();
@@ -138,7 +203,7 @@ $(function () {
                 }).always(function () {
                     todoApp.removeClass('loading-overlay');
                 });
-            });
+            }
 
             //НОВАЯ ЗАПИСЬ
             $("#new-todo").keyup(function (event) {
@@ -150,7 +215,7 @@ $(function () {
                     }).done(function (response) {
                         newTodo.val('');
                         if (response.success) {
-                            addTag(response.id, response.name, response.state)
+                            addTag(response.id, response.name, response.state);
                         } else {
                             console.log(response.message);
                             showWarningAlert();
