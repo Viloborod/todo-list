@@ -1,6 +1,6 @@
 <?php
 
-namespace app\models;
+namespace app\models\dtdl;
 
 use Yii;
 use yii\base\NotSupportedException;

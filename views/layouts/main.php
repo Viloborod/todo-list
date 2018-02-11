@@ -27,41 +27,25 @@ AppAsset::register($this);
 
 <body>
 <?php $this->beginBody() ?>
+<?php
+$menuItems = [
+    ['label' => 'Главная', 'url' => ['/todo/index']],
+];
+
+if (Yii::$app->user->isGuest) {
+    $menuItems[] = ['label' => 'Регистрация', 'url' => ['/site/signup']];
+    $menuItems[] = ['label' => 'Вход', 'url' => ['/site/login']];
+} else {
+    $menuItems[] =  ['label' => 'Выход (' . Yii::$app->user->identity->username . ')', 'url' => ['/site/logout']];
+}
+
+echo Nav::widget([
+    'options' => ['class' => 'list-inline'],
+    'items' => $menuItems,
+]);
+?>
+
 <div class="wrap">
-    <?php
-        NavBar::begin([
-            'brandLabel' => 'Todos',
-            'brandUrl' => Yii::$app->homeUrl,
-            'options' => [
-                'class' => 'navbar-inverse navbar-fixed-top',
-            ],
-        ]);
-
-        $menuItems = [
-            ['label' => 'Главная', 'url' => ['/todo/index']],
-        ];
-
-        if (Yii::$app->user->isGuest) {
-            $menuItems[] = ['label' => 'Регистрация', 'url' => ['/site/signup']];
-            $menuItems[] = ['label' => 'Вход', 'url' => ['/site/login']];
-        } else {
-            $menuItems[] = '<li>'
-                . Html::beginForm(['/site/logout'], 'post')
-                . Html::submitButton(
-                    'Выход (' . Yii::$app->user->identity->username . ')',
-                    ['class' => 'btn btn-link logout']
-                )
-                . Html::endForm()
-                . '</li>';
-        }
-
-        echo Nav::widget([
-            'options' => ['class' => 'navbar-nav navbar-right'],
-            'items' => $menuItems,
-        ]);
-
-        NavBar::end();
-    ?>
 
     <div class="container">
         <?= $content ?>

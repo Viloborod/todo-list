@@ -1,8 +1,16 @@
 <?php
 
 /* @var $this yii\web\View */
+/* @var $todos array */
+
+use app\assets\TodoAsset;
+use yii\helpers\Json;
+
+TodoAsset::register($this);
 
 $this->title = 'Todos';
+
+$this->registerJs("var todos = " . Json::encode($todos) . ";",  \yii\web\View::POS_HEAD);
 ?>
 
 <section class="todoapp">
@@ -14,25 +22,19 @@ $this->title = 'Todos';
     <section class="main">
         <input id="toggle-all" class="toggle-all" type="checkbox">
         <label for="toggle-all">Mark all as complete</label>
-        <ul class="todo-list">
+        <ul class="todo-list" id="tag-list">
             <!-- These are here just to show the structure of the list items -->
             <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
-            <li class="completed">
-                <div class="view">
-                    <input class="toggle" type="checkbox" checked>
-                    <label>Taste JavaScript</label>
-                    <button class="destroy"></button>
-                </div>
-                <input class="edit" value="Create a TodoMVC template">
-            </li>
-            <li>
-                <div class="view">
-                    <input class="toggle" type="checkbox">
-                    <label>Buy a unicorn</label>
-                    <button class="destroy"></button>
-                </div>
-                <input class="edit" value="Rule the web">
-            </li>
+<!--            --><?php //foreach ($todos as $todo) { ?>
+<!--                <li class="--><?//= $todo['state'] ?><!--" data-id="--><?//= $todo['id'] ?><!--">-->
+<!--                    <div class="view">-->
+<!--                        <input class="toggle" type="checkbox" checked>-->
+<!--                        <label>--><?//= $todo['name'] ?><!--</label>-->
+<!--                        <button class="destroy"></button>-->
+<!--                    </div>-->
+<!--                    <input class="edit" value="--><?//= $todo['name'] ?><!--">-->
+<!--                </li>-->
+<!--            --><?php //} ?>
         </ul>
     </section>
     <!-- This footer should hidden by default and shown when there are todos -->

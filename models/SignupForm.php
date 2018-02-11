@@ -10,6 +10,8 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use app\models\dtdl\User;
+
 
 /**
  * Signup form
@@ -28,16 +30,16 @@ class SignupForm extends Model
     {
         return [
             ['username', 'trim'],
-            ['username', 'required'],
-            ['username', 'unique', 'targetClass' => '\app\models\User', 'message' => 'This username has already been taken.'],
+            ['username', 'required', 'message'=>'Поле необходимо заполнить'],
+            ['username', 'unique', 'targetClass' => '\app\models\dtdl\User', 'message' => 'Имя пользователя уже существует'],
             ['username', 'string', 'min' => 2, 'max' => 255],
             ['email', 'trim'],
-            ['email', 'required'],
+            ['email', 'required', 'message'=>'Поле необходимо заполнить'],
             ['email', 'email'],
             ['email', 'string', 'max' => 255],
-            ['email', 'unique', 'targetClass' => '\app\models\User', 'message' => 'This email address has already been taken.'],
-            ['password', 'required'],
-            ['password', 'string', 'min' => 6],
+            ['email', 'unique', 'targetClass' => '\app\models\dtdl\User', 'message' => 'Этот email уже используется'],
+            ['password', 'required', 'message' => 'Поле необходимо заполнить'],
+            ['password', 'string', 'min' => 3, 'message' => 'Пароль должен содержать не менее 3 знаков'],
         ];
     }
 
