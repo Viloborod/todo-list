@@ -12,6 +12,7 @@ use app\assets\AppAsset;
 
 AppAsset::register($this);
 ?>
+
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
@@ -23,10 +24,51 @@ AppAsset::register($this);
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
 </head>
+
 <body>
 <?php $this->beginBody() ?>
-<?= $content ?>
+<div class="wrap">
+    <?php
+        NavBar::begin([
+            'brandLabel' => 'Todos',
+            'brandUrl' => Yii::$app->homeUrl,
+            'options' => [
+                'class' => 'navbar-inverse navbar-fixed-top',
+            ],
+        ]);
+
+        $menuItems = [
+            ['label' => 'Главная', 'url' => ['/todo/index']],
+        ];
+
+        if (Yii::$app->user->isGuest) {
+            $menuItems[] = ['label' => 'Регистрация', 'url' => ['/site/signup']];
+            $menuItems[] = ['label' => 'Вход', 'url' => ['/site/login']];
+        } else {
+            $menuItems[] = '<li>'
+                . Html::beginForm(['/site/logout'], 'post')
+                . Html::submitButton(
+                    'Выход (' . Yii::$app->user->identity->username . ')',
+                    ['class' => 'btn btn-link logout']
+                )
+                . Html::endForm()
+                . '</li>';
+        }
+
+        echo Nav::widget([
+            'options' => ['class' => 'navbar-nav navbar-right'],
+            'items' => $menuItems,
+        ]);
+
+        NavBar::end();
+    ?>
+
+    <div class="container">
+        <?= $content ?>
+    </div>
+</div>
 <?php $this->endBody() ?>
 </body>
+
 </html>
 <?php $this->endPage() ?>
