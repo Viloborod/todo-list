@@ -47,4 +47,69 @@ class TodoController extends Controller
         $todos = Todo::find()->where(['user_id' => $user->id])->asArray()->all();
         return $this->render('index', ['todos' => $todos]);
     }
+
+    public function actionAdd() {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        /** @var User $user */
+        $user = Yii::$app->user->identity;
+        $todo = new Todo();
+        $todo->user_id = $user->id;
+        if ($todo->load(\Yii::$app->request->post(),'') && $todo->validate()) {
+            try {
+                $todo->save(false);
+                return $response = [
+                    'success' => true,
+                    'id' => $todo->id,
+                    'name' => $todo->name,
+                    'state' => $todo::STATE_VIEW,
+                ];
+            } catch (\Exception $e) {
+                \Yii::error($e, __METHOD__);
+                return $response = [
+                    'success' => false,
+                    'message' => 'не удалось сохранить в БД'
+                ];
+            }
+        };
+        return $response = [
+            'success' => false,
+            'message' => 'Нет данных или данные не верны'
+        ];
+    }
+
+    public function actionChangeState() {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+
+        /** @var User $user */
+        $user = Yii::$app->user->identity;
+        $todoId = \Yii::$app->request->post('id');
+        $state = \Yii::$app->request->post('state');
+        $todo = Todo::find()
+            ->andWhere(['id' => $todoId])
+            ->andWhere(['user_id' => $user->id])
+            ->one();
+        if ($todo && $todo->state != $state) {
+            $todo->state = $state;
+            try {
+                $todo->save(false);
+                return $response = [
+                    'success' => true,
+                    'id' => $todo->id,
+                    'name' => $todo->name,
+                    'state' => $todo->state,
+                ];
+            } catch (\Exception $e) {
+                \Yii::error($e, __METHOD__);
+                return $response = [
+                    'success' => false,
+                    'message' => 'не удалось сохранить в БД'
+                ];
+            }
+        }
+        return $response = [
+            'success' => false,
+            'message' => 'Нет данных или данные не верны'
+        ];
+    }
 }

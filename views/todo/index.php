@@ -10,13 +10,13 @@ TodoAsset::register($this);
 
 $this->title = 'Todos';
 
-$this->registerJs("var todos = " . Json::encode($todos) . ";",  \yii\web\View::POS_HEAD);
+$this->registerJs("var phpTodos = " . Json::encode($todos) . ";",  \yii\web\View::POS_HEAD);
 ?>
 
 <section class="todoapp">
     <header class="header">
         <h1>todos</h1>
-        <input class="new-todo" placeholder="What needs to be done?" autofocus>
+        <input class="new-todo" id="new-todo" placeholder="What needs to be done?" autofocus>
     </header>
     <!-- This section should be hidden by default and shown when there are todos -->
     <section class="main">
@@ -25,32 +25,22 @@ $this->registerJs("var todos = " . Json::encode($todos) . ";",  \yii\web\View::P
         <ul class="todo-list" id="tag-list">
             <!-- These are here just to show the structure of the list items -->
             <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
-<!--            --><?php //foreach ($todos as $todo) { ?>
-<!--                <li class="--><?//= $todo['state'] ?><!--" data-id="--><?//= $todo['id'] ?><!--">-->
-<!--                    <div class="view">-->
-<!--                        <input class="toggle" type="checkbox" checked>-->
-<!--                        <label>--><?//= $todo['name'] ?><!--</label>-->
-<!--                        <button class="destroy"></button>-->
-<!--                    </div>-->
-<!--                    <input class="edit" value="--><?//= $todo['name'] ?><!--">-->
-<!--                </li>-->
-<!--            --><?php //} ?>
         </ul>
     </section>
     <!-- This footer should hidden by default and shown when there are todos -->
-    <footer class="footer">
+    <footer class="footer" id="tag-footer">
         <!-- This should be `0 items left` by default -->
-        <span class="todo-count"><strong>0</strong> item left</span>
+        <span class="todo-count"><strong id="todo-count">0</strong> item left</span>
         <!-- Remove this if you don't implement routing -->
         <ul class="filters">
             <li>
-                <a class="selected" href="#/">All</a>
+                <a class="selected" href="#/" id="tag-footer-all">All</a>
             </li>
             <li>
-                <a href="#/active">Active</a>
+                <a href="#/active" id="tag-footer-active">Active</a>
             </li>
             <li>
-                <a href="#/completed">Completed</a>
+                <a href="#/completed" id="tag-footer-completed">Completed</a>
             </li>
         </ul>
         <!-- Hidden if no completed items are left ↓ -->
