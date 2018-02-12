@@ -15,6 +15,7 @@ $(function () {
             var footerAll = footer.find('#tag-footer-all');
             var footerActive = footer.find('#tag-footer-active');
             var footerCompleted = footer.find('#tag-footer-completed');
+            var formVal;
 
             //ФИЛЬТРЫ
             footerAll.click(function () {
@@ -152,11 +153,6 @@ $(function () {
                 }
             });
 
-            function changeTag(id, name, state) {
-                var tag = $('li[data-id="'+id+'"]');
-                recountTodoCount();
-            }
-
             //ИЗМЕНЕНИЕ СТАТУСА ВСЕХ ЗАПИСЕЙ
             $('#toggle-all').change(function () {
                 var toggleAllChecked = this.checked;
@@ -186,6 +182,7 @@ $(function () {
                 }
             });
 
+            //ИЗМЕНЕНИЕ СТАТУСА
             function changeState(tagIds, state) {
                 todoApp.addClass('loading-overlay');
                 $.post('/todo/change-state', {
@@ -227,6 +224,37 @@ $(function () {
                     });
                 }
             });
+
+            // ПРАВКА СУЩЕСТВУЮЩЕЙ ЗАПИСИ
+            tagListField.on('dblclick', 'li[data-id] label', function() {
+                $(this).closest('li').addClass('editing');
+                var inputEdit = $(this).closest('li').find('input.edit');
+                formVal = inputEdit.val();
+                inputEdit.val('').focus().val(formVal);
+
+            });
+
+            tagListField.on('blur', 'input.edit', function() {
+                $(this).closest('li').removeClass('editing');
+                if (formVal != $(this).val()) {
+                    console.log(1);
+                }
+            });
+
+            tagListField.on('keyup', 'input.edit', function() {
+                if (event.keyCode == 13) {
+                    this.blur();
+                }
+            });
+
+            tagListField.on('click', '.destroy', function () {
+                removeTag($(this).closest('li'));
+            });
+
+            function changeTag(id, name, state) {
+                var tag = $('li[data-id="'+id+'"]');
+                recountTodoCount();
+            }
         }
     }
 });
