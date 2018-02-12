@@ -15,6 +15,7 @@ $(function () {
             var footerAll = footer.find('#tag-footer-all');
             var footerActive = footer.find('#tag-footer-active');
             var footerCompleted = footer.find('#tag-footer-completed');
+            var clearCompleted = footer.find('#clear-completed');
             var formVal;
 
             //ФИЛЬТРЫ
@@ -60,10 +61,15 @@ $(function () {
             function recountTodoCount() {
                 tagListFieldLength = tagListField.find('li').not('.completed').length;
                 tagForm.find('#todo-count').html(tagListFieldLength);
-                if (tagListFieldLength > 0) {
+                if (tagListField.find('li').length > 0) {
                     $('#tag-footer').show();
                 } else {
                     $('#tag-footer').hide();
+                }
+                if (tagListField.find('li.completed').length > 0) {
+                    clearCompleted.show();
+                } else {
+                    clearCompleted.hide();
                 }
             }
 
@@ -108,18 +114,38 @@ $(function () {
                 alert('Произошла ошибка, перезагрузите страницу')
             }
 
-            //УДАЛЕНИЕ СТРОК
+            //УДАЛЕНИЕ ОДНОЙ СТРОКИ
             tagListField.on('click', '.destroy', function () {
-                removeTag($(this).closest('li'));
+                removeTags([$(this).closest('li').data('id')]);
             });
 
-            function removeTag(tag) {
-                todoApp.addClass('loading-overlay');
+            //УДАЛЕНИЕ ВСЕХ ЗАКРЫТЫХ СТРОК
+            clearCompleted.click(function () {
+                var checkedInput = tagListField.find('li input.toggle:checked');
+                var tagIds = [];
+                if (checkedInput.length > 0) {
+                    checkedInput.closest('li').each(function (i, val) {
+                        tagIds.push($(val).data('id'));
+                    });
+                }
+                if (tagIds != 0) {
+                    removeTags(tagIds);
+                }
+            });
+
+            function removeTags(tagIds) {
+                if (todoApp.hasClass('loading-overlay')) {
+                    return false;
+                } else {
+                    todoApp.addClass('loading-overlay');
+                }
                 $.post('/todo/remove', {
-                    tagId: tag.data('id')
+                    tagIds: tagIds
                 }).done(function (response) {
                     if (response.success) {
-                        tag.remove();
+                        tagIds.forEach(function(item) {
+                            $('li[data-id="' + item + '"]').remove();
+                        });
                     } else {
                         console.log(response.message);
                         showWarningAlert();
@@ -184,13 +210,22 @@ $(function () {
 
             //ИЗМЕНЕНИЕ СТАТУСА
             function changeState(tagIds, state) {
-                todoApp.addClass('loading-overlay');
+                if (todoApp.hasClass('loading-overlay')) {
+                    return false;
+                } else {
+                    todoApp.addClass('loading-overlay');
+                }
                 $.post('/todo/change-state', {
                     tagIds: tagIds,
                     state: state
                 }).done(function (response) {
                     if (response.success) {
-
+                        if (state == 'view' && footerCompleted.hasClass('selected')) {
+                            footerCompleted.click();
+                        }
+                        if (state == 'completed' && footerActive.hasClass('selected')) {
+                            footerActive.click();
+                        }
                     } else {
                         console.log(response.message);
                         showWarningAlert();
@@ -206,13 +241,20 @@ $(function () {
             $("#new-todo").keyup(function (event) {
                 if (event.keyCode == 13) {
                     var newTodo = $(this);
-                    todoApp.addClass('loading-overlay');
+                    if (todoApp.hasClass('loading-overlay')) {
+                        return false;
+                    } else {
+                        todoApp.addClass('loading-overlay');
+                    }
                     $.post('/todo/add', {
                         name: newTodo.val()
                     }).done(function (response) {
                         newTodo.val('');
                         if (response.success) {
                             addTag(response.id, response.name, response.state);
+                            if (footerCompleted.hasClass('selected')) {
+                                footerCompleted.click();
+                            }
                         } else {
                             console.log(response.message);
                             showWarningAlert();
@@ -235,9 +277,32 @@ $(function () {
             });
 
             tagListField.on('blur', 'input.edit', function() {
-                $(this).closest('li').removeClass('editing');
+                var tag = $(this).closest('li');
+                tag.removeClass('editing');
+                var tagId = tag.data('id');
+                var name = tag.find('input.edit').val();
+                changeName(tagId, name);
                 if (formVal != $(this).val()) {
-                    console.log(1);
+                    if (todoApp.hasClass('loading-overlay')) {
+                        return false;
+                    } else {
+                        todoApp.addClass('loading-overlay');
+                    }
+                    $.post('/todo/change-name', {
+                        tagId: tagId,
+                        name: name
+                    }).done(function (response) {
+                        if (response.success) {
+
+                        } else {
+                            console.log(response.message);
+                            showWarningAlert();
+                        }
+                    }).fail(function () {
+                        showWarningAlert()
+                    }).always(function () {
+                        todoApp.removeClass('loading-overlay');
+                    });
                 }
             });
 
@@ -251,10 +316,14 @@ $(function () {
                 removeTag($(this).closest('li'));
             });
 
-            function changeTag(id, name, state) {
+            function changeName(id, name) {
                 var tag = $('li[data-id="'+id+'"]');
+                tag.find('input.edit').val(name);
+                tag.find('div.view').find('label').html(name);
                 recountTodoCount();
             }
+
+
         }
     }
 });

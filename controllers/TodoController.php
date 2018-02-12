@@ -83,26 +83,28 @@ class TodoController extends Controller
 
         /** @var User $user */
         $user = Yii::$app->user->identity;
-        $todoId = \Yii::$app->request->post('tagId');
-        $todo = Todo::find()
-            ->andWhere(['id' => $todoId])
-            ->andWhere(['user_id' => $user->id])
-            ->one();
-        if ($todo) {
-            try {
-                $todo->delete();
-            } catch (\Exception $e) {
-                \Yii::error($e, __METHOD__);
+        $todoIds = \Yii::$app->request->post('tagIds');
+        foreach ($todoIds as $todoId) {
+            $todo = Todo::find()
+                ->andWhere(['id' => $todoId])
+                ->andWhere(['user_id' => $user->id])
+                ->one();
+            if ($todo) {
+                try {
+                    $todo->delete();
+                } catch (\Exception $e) {
+                    \Yii::error($e, __METHOD__);
+                    return $response = [
+                        'success' => false,
+                        'message' => 'не удалось удалить из БД'
+                    ];
+                }
+            } else {
                 return $response = [
                     'success' => false,
-                    'message' => 'не удалось удалить из БД'
+                    'message' => 'Нет данных или данные не верны'
                 ];
             }
-        } else {
-            return $response = [
-                'success' => false,
-                'message' => 'Нет данных или данные не верны'
-            ];
         }
         return $response = [
             'success' => true,
@@ -129,7 +131,7 @@ class TodoController extends Controller
                     \Yii::error($e, __METHOD__);
                     return $response = [
                         'success' => false,
-                        'message' => 'не удалось сохранить в БД'
+                        'message' => 'Не удалось сохранить в БД'
                     ];
                 }
             } else {
@@ -139,6 +141,42 @@ class TodoController extends Controller
                 ];
             }
         }
+        return $response = [
+            'success' => true,
+        ];
+    }
+
+    public function actionChangeName() {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        /** @var User $user */
+
+        $user = Yii::$app->user->identity;
+        $todoId = \Yii::$app->request->post('tagId');
+        $name = \Yii::$app->request->post('name');
+
+        $todo = Todo::find()
+            ->andWhere(['id' => $todoId])
+            ->andWhere(['user_id' => $user->id])
+            ->one();
+
+        if ($todo) {
+            $todo->name = $name;
+            try {
+                $todo->save(false);
+            } catch (\Exception $e) {
+                \Yii::error($e, __METHOD__);
+                return $response = [
+                    'success' => false,
+                    'message' => 'Не удалось сохранить в БД'
+                ];
+            }
+        } else {
+            return $response = [
+                'success' => false,
+                'message' => 'Нет данных или данные не верны'
+            ];
+        }
+
         return $response = [
             'success' => true,
         ];

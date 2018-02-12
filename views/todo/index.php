@@ -44,7 +44,7 @@ $this->registerJs("var phpTodos = " . Json::encode($todos) . ";",  \yii\web\View
             </li>
         </ul>
         <!-- Hidden if no completed items are left ↓ -->
-        <button class="clear-completed">Clear completed</button>
+        <button class="clear-completed" id="clear-completed">Clear completed</button>
     </footer>
 </section>
 <footer class="info">

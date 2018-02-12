@@ -11,4 +11,4 @@ use \yii\helpers\Html;
 $this->title = 'Внимание';
 
 ?>
-<p><?= Html::a('Войдите', ['site/login']) ?> или <?= Html::a('зарегистрируйтесь', ['site/signup']) ?></p>
+<p><?= Html::a('Войдите', ['site/login']) ?> (admin admin) или <?= Html::a('зарегистрируйтесь', ['site/signup']) ?></p>
